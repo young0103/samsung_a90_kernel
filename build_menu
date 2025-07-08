@@ -42,7 +42,17 @@ STD=`echo -e "\033[0m"`		# Text Clear
  
 build_kernel(){  
   export ARCH=arm64
-  echo $ARCH
+### ───────────────── DEBUG BLOCK ─────────────────
+  echo "=== DEFCONFIG analyzing ==="
+  echo "PWD               : $(pwd)"
+  echo "current branch        : $(git rev-parse --abbrev-ref HEAD)"
+  echo "ARCH env          : ${ARCH:-<unset>}"
+  echo "file?        : $(test -f arch/arm64/configs/r3q_kor_single_defconfig && echo YES || echo NO)"
+  echo "ls | grep r3q     :" ; ls arch/arm64/configs | grep -i r3q || echo "(none)"
+  echo "make recognize ARCH:"
+  make -s -C . --no-print-directory -f Makefile -p | grep -m1 "^ARCH =" 
+  echo "================================================"
+### ───────────────────────────────────────────────
   echo "${BGREEN}***** Compiling kernel *****${STD}"
   [ ! -d "$OUT_DIR" ] && mkdir $OUT_DIR
   make -j$(nproc) -C "$KERNEL_DIR" $KERNEL_MAKE_ENV r3q_kor_single_defconfig
