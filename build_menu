@@ -55,6 +55,7 @@ export PATH="$PATH:${KERNEL_DIR}/aarch64-linux-android-4.9/bin:${KERNEL_DIR}/${C
 export CROSS_COMPILE="${KERNEL_DIR}/aarch64-linux-android-4.9/bin/aarch64-linux-android-"
 export CLANG_TRIPLE="${KERNEL_DIR}/${CLANG_DIR}/bin/aarch64-linux-gnu-"
 export ARCH=arm64
+export SRCARCH=arm64
 export LLVM=1
 
 #
