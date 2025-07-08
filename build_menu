@@ -64,17 +64,14 @@ export LLVM=1
 build_kernel() {
   echo "${BGREEN}>>> Compiling kernel (${DEFCONFIG})${STD}"
   mkdir -p "${OUT_DIR}"
-#───────debug0 start
-  echo "redebug"
-  make -C "${KERNEL_DIR}" help | grep '_defconfig'
-  exit 0
-#───────debug0 end
-  # 1) defconfig & build
-  make ${MAKE_ARGS} -C "${KERNEL_DIR}" r3q_kor_single_defconfig
-#───────debug1 start 
 
-#───────debug1 end
-  make ${MAKE_ARGS} -C "${KERNEL_DIR}"
+  # 1) defconfig & build
+  make -C "${KERNEL_DIR}" \
+       ARCH=arm64 SRCARCH=arm64 \
+       KBUILD_DEFCONFIG=r3q_kor_single \
+       defconfig
+
+  make -C "${KERNEL_DIR}" ${MAKE_ARGS}
 
   echo ">>> Now building with ${DEFCONFIG}"
 
