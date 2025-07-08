@@ -2,7 +2,7 @@
 # LIGHTNING-KERNEL-BUILD (Method A: use `renovation/` for DTB/DTBO)
 
 set -euo pipefail
-# ─── DEBUG: 현재 브랜치와 defconfig 확인 후 스크립트 종료 ────────────────────────
+# ─── DEBUG:────────────────────────
 echo ">>> Cloned branch: $(git rev-parse --abbrev-ref HEAD)"
 echo ">>> Available defconfigs:"
 ls arch/arm64/configs | grep r3q || true
