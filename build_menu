@@ -68,7 +68,8 @@ build_kernel() {
   # 1) defconfig & build
   make -C "${KERNEL_DIR}" \
      ARCH=arm64 SRCARCH=arm64 \
-     r3q_kor_single_defconfig
+     KBUILD_DEFCONFIG=r3q_kor_single \
+     defconfig
 
   make -C "${KERNEL_DIR}" \
      ARCH=arm64 SRCARCH=arm64 \
