@@ -68,6 +68,8 @@ build_kernel() {
   make ${MAKE_ARGS} -C "${KERNEL_DIR}" ${DEFCONFIG}
   make ${MAKE_ARGS} -C "${KERNEL_DIR}"
 
+  echo ">>> Now building with ${DEFCONFIG}"
+
   # 2) copy Image
   if [ -f "${IMAGE_PATH}.gz" ]; then
     cp "${IMAGE_PATH}.gz" "${OUT_DIR}/Image.gz"
