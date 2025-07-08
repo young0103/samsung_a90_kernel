@@ -66,13 +66,10 @@ build_kernel() {
   mkdir -p "${OUT_DIR}"
 
   # 1) defconfig & build
-  make -C "${KERNEL_DIR}" \
-     ARCH=arm64 SRCARCH=arm64 \
-     KBUILD_DEFCONFIG=r3q_kor_single
+  make ARCH=arm64 SRCARCH=arm64 mrproper
+  make ARCH=arm64 SRCARCH=arm64 KBUILD_DEFCONFIG=r3q_kor_single defconfig
 
-  make -C "${KERNEL_DIR}" \
-     ARCH=arm64 SRCARCH=arm64 \
-     ${MAKE_ARGS}
+  make ARCH=arm64 SRCARCH=arm64 -j$(nproc) Image
 
   echo ">>> Now building with ${DEFCONFIG}"
 
