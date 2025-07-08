@@ -66,12 +66,11 @@ build_kernel() {
   mkdir -p "${OUT_DIR}"
 
   # 1) defconfig & build
-  make ARCH=arm64 SRCARCH=arm64 mrproper
-  make ARCH=arm64 SRCARCH=arm64 KBUILD_DEFCONFIG=r3q_kor_single defconfig
+  make -C "${KERNEL_DIR}" ARCH=arm64 SRCARCH=arm64 mrproper
+  make -C "${KERNEL_DIR}" ARCH=arm64 SRCARCH=arm64 KBUILD_DEFCONFIG=${DEFCONFIG%_defconfig} defconfig
+  make -C "${KERNEL_DIR}" ARCH=arm64 SRCARCH=arm64 j$(nproc) Image dtbs
 
-  make ARCH=arm64 SRCARCH=arm64 -j$(nproc) Image
-
-  echo ">>> Now building with ${DEFCONFIG}"
+  echo "${BGREEN}>>> Build complete for ${DEFCONFIG}${STD}"
 
   # 2) copy Image
   if [ -f "${IMAGE_PATH}.gz" ]; then
