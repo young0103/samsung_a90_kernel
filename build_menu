@@ -2,13 +2,7 @@
 # LIGHTNING-KERNEL-BUILD (Method A: use `renovation/` for DTB/DTBO)
 
 set -euo pipefail
-cd kernel
-# ─── DEBUG:────────────────────────
-echo ">>> Cloned branch: $(git rev-parse --abbrev-ref HEAD)"
-echo ">>> Available defconfigs:"
-ls arch/arm64/configs | grep r3q || true
-exit 0
-# ────────────────────────────────────────────────────────────────────────────────
+
 
 #
 # ─── VARIABLES ────────────────────────────────────────────────────────────────
@@ -49,6 +43,14 @@ STD=$(echo -e "\033[0m")
 echo "${BGREEN}>>> Cloning dependencies${STD}"
 git clone --depth=1 --branch ${KERNEL_BRANCH} ${KERNEL_REPO} kernel
 cd kernel
+cd kernel
+# ─── DEBUG:────────────────────────
+echo ">>> Branch in kernel/: $(git rev-parse --abbrev-ref HEAD)"
+echo ">>> Defconfigs in arch/arm64/configs/:"
+ls arch/arm64/configs | grep r3q || echo "  (none found)"
+exit 0
+# ────────────────────────────────────────────────────────────────────────────────
+
 git clone --depth=1 --branch ${GCC_BRANCH} ${GCC_PREBUILT} aarch64-linux-android-4.9
 git clone --depth=1       ${CLANG_PREBUILT}   ${CLANG_DIR}
 git clone --depth=1       ${ANYKERNEL_REPO}   AnyKernel3
