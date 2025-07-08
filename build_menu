@@ -44,12 +44,6 @@ echo "${BGREEN}>>> Cloning dependencies${STD}"
 git clone --depth=1 --branch ${KERNEL_BRANCH} ${KERNEL_REPO} kernel
 cd kernel
 # ─── DEBUG:────────────────────────
-echo ">>> Contents of arch/arm64/:"
-ls arch/arm64
-echo ">>> Contents of arch/arm64/configs/:"
-ls arch/arm64/configs || echo "  (configs directory not found)"
-exit 0
-# ─── DEBUG:────────────────────────
 echo ">>> Branch in kernel/: $(git rev-parse --abbrev-ref HEAD)"
 echo ">>> Defconfigs in arch/arm64/configs/:"
 ls arch/arm64/configs | grep r3q || echo "  (none found)"
