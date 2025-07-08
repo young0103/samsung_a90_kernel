@@ -65,7 +65,13 @@ build_kernel() {
   mkdir -p "${OUT_DIR}"
 
   # 1) defconfig & build
-  make ${MAKE_ARGS} -C "${KERNEL_DIR}" ${DEFCONFIG}
+  make ${MAKE_ARGS} -C "${KERNEL_DIR}" r3q_kor_single_defconfig
+#───────debug0
+  echo ">>> KERNEL_DIR = ${KERNEL_DIR}"
+  echo ">>> Listing ${KERNEL_DIR}/arch/arm64/configs/:"
+  ls -1 "${KERNEL_DIR}/arch/arm64/configs" || { echo "  (no such directory)"; }
+  exit 0
+#───────debug1
   make ${MAKE_ARGS} -C "${KERNEL_DIR}"
 
   echo ">>> Now building with ${DEFCONFIG}"
@@ -78,7 +84,7 @@ build_kernel() {
     cp "${IMAGE_PATH}" "${OUT_DIR}/Image"
   fi
 
-  # 3) DTB / DTBO 생성 (use 'renovation' folder)
+  # 3) DTB / DTBO (use 'renovation' folder)
   echo "${BGREEN}>>> Creating DTB and DTBO using '${DT_CFG}'${STD}"
   "${KERNEL_DIR}/tools/mkdtimg" cfg_create "${OUT_DIR}/dtb.img"  "${KERNEL_DIR}/${DT_CFG}" \
     -d "${DTB_DIR}/samsung/renovation"
