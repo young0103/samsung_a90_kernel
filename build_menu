@@ -62,14 +62,13 @@ export LLVM=1
 # ─── BUILD FUNCTION ──────────────────────────────────────────────────────────
 #
 build_kernel() {
-  echo "${BGREEN}>>> Compiling kernel2 (${DEFCONFIG})${STD}"
+  echo "${BGREEN}>>> Compiling kernel (${DEFCONFIG})${STD}"
   mkdir -p "${OUT_DIR}"
 
   # 1) defconfig & build
   make -C "${KERNEL_DIR}" \
      ARCH=arm64 SRCARCH=arm64 \
-     KBUILD_DEFCONFIG=r3q_kor_single \
-     defconfig
+     KBUILD_DEFCONFIG=r3q_kor_single
 
   make -C "${KERNEL_DIR}" \
      ARCH=arm64 SRCARCH=arm64 \
