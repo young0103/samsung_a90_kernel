@@ -2,6 +2,7 @@
 # LIGHTNING-KERNEL-BUILD (Method A: use `renovation/` for DTB/DTBO)
 
 set -euo pipefail
+cd kernel
 # ─── DEBUG:────────────────────────
 echo ">>> Cloned branch: $(git rev-parse --abbrev-ref HEAD)"
 echo ">>> Available defconfigs:"
