@@ -63,7 +63,9 @@ export LLVM=1
 build_kernel() {
   echo "${BGREEN}>>> Compiling kernel (${DEFCONFIG})${STD}"
   mkdir -p "${OUT_DIR}"
-
+#───────debug0
+  echo ">>> start make kernel_dir r3q_kor_single"
+#───────debug1
   # 1) defconfig & build
   make ${MAKE_ARGS} -C "${KERNEL_DIR}" r3q_kor_single_defconfig
 #───────debug0
