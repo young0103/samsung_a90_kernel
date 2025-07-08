@@ -42,6 +42,7 @@ STD=`echo -e "\033[0m"`		# Text Clear
  
 build_kernel(){  
   export ARCH=arm64
+  echo $ARCH
   echo "${BGREEN}***** Compiling kernel *****${STD}"
   [ ! -d "$OUT_DIR" ] && mkdir $OUT_DIR
   make -j$(nproc) -C "$KERNEL_DIR" $KERNEL_MAKE_ENV r3q_kor_single_defconfig
