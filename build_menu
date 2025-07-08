@@ -65,14 +65,9 @@ build_kernel() {
   echo "${BGREEN}>>> Compiling kernel (${DEFCONFIG})${STD}"
   mkdir -p "${OUT_DIR}"
 #───────debug0 start
-  echo ">>> ARCH=${ARCH}"
-  echo ">>> SRCARCH=${SRCARCH:-<unset>}"  
-  echo ">>> start"
-  # list both possible paths
-  echo ">>> arch/arm/configs/:"
-  ls "${KERNEL_DIR}/arch/arm/configs" 2>/dev/null || echo "  (none)"
-  echo ">>> arch/arm64/configs/:"
-  ls "${KERNEL_DIR}/arch/arm64/configs" 2>/dev/null || echo "  (none)"
+  echo "redebug"
+  make -C "${KERNEL_DIR}" help | grep '_defconfig'
+  exit 0
 #───────debug0 end
   # 1) defconfig & build
   make ${MAKE_ARGS} -C "${KERNEL_DIR}" r3q_kor_single_defconfig
