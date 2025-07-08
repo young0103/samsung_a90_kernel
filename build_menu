@@ -66,7 +66,18 @@ build_kernel() {
   mkdir -p "${OUT_DIR}"
 
   # 1) defconfig & build
-  echo "${BGREEN}>>> Build start ${DEFCONFIG}${STD}"
+  echo ">>> Using Makefile at: ${KERNEL_DIR}/Makefile"
+  ls -l "${KERNEL_DIR}/Makefile"
+  head -n 20 "${KERNEL_DIR}/Makefile"
+
+  # DEBUG: verify ARCH/SRCARCH and config dirs
+  echo ">>> ARCH=${ARCH}"
+  echo ">>> SRCARCH=${SRCARCH:-<unset>}"
+  echo ">>> Contents of arch/arm/configs/:"
+  ls -1 "${KERNEL_DIR}/arch/arm/configs" 2>/dev/null || echo "  (none)"
+  echo ">>> Contents of arch/arm64/configs/:"
+  ls -1 "${KERNEL_DIR}/arch/arm64/configs" 2>/dev/null || echo "  (none)"
+  #debug
   make -C "${KERNEL_DIR}" ARCH=arm64 SRCARCH=arm64 mrproper
   make -C "${KERNEL_DIR}" ARCH=arm64 SRCARCH=arm64 KBUILD_DEFCONFIG=${DEFCONFIG%_defconfig} defconfig
   make -C "${KERNEL_DIR}" ARCH=arm64 SRCARCH=arm64 j$(nproc) Image dtbs
