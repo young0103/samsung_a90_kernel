@@ -375,9 +375,6 @@ HOSTCFLAGS  += -Wno-unused-value -Wno-unused-parameter \
 endif
 
 # Make variables (CC, etc...)
-<<<<<<< HEAD
-AS		= $(CROSS_COMPILE)as
-=======
 CPP		= $(CC) -E
 ifneq ($(LLVM),)
 CC		= clang
@@ -393,7 +390,6 @@ else
 #CC		= $(CROSS_COMPILE)gcc
 CC    ?= $(srctree)/toolchain/clang/host/linux-x86/clang-r383902/bin/clang
 #CC    = ../PLATFORM/prebuilts/clang/host/linux-x86/clang-r383902/bin/clang
->>>>>>> 35c364481af3 (makefile: Do not use samsung default toolchain path)
 LD		= $(CROSS_COMPILE)ld
 REAL_CC		= $(CROSS_COMPILE)gcc
 LDGOLD		= $(CROSS_COMPILE)ld.gold
