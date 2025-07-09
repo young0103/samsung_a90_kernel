@@ -89,11 +89,14 @@ jobs:
             build_once () {
               local OUT=$1
               local SRC="$PWD"
-
-              # ① defconfig 생성(소스 트리)  ← olddefconfig 제거
-              make -C "$SRC" ARCH=arm64 r3q_kor_single_defconfig
-
-              # ② out‑of‑tree 빌드
+            
+              # 1) defconfig → .config 직접 복사
+              cp "$SRC/arch/arm64/configs/r3q_kor_single_defconfig" "$SRC/.config"
+            
+              # 2) 종속 옵션 채우기 (oldconfig는 삼성 트리에 존재)
+              make -C "$SRC" ARCH=arm64 oldconfig < /dev/null
+            
+              # 3) out‑of‑tree 빌드
               mkdir -p "$OUT"
               cp "$SRC/.config" "$OUT"
               make -C "$SRC" O="$OUT" -j"$(nproc)"
