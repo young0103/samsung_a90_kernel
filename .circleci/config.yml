@@ -14,7 +14,7 @@ jobs:
     executor: kernel-exec
     steps:
       #------------------------------------------------------------
-      # 1. 빌드용 패키지 설치
+      # 1. 빌드용 패키지 설치
       #------------------------------------------------------------
       - run:
           name: Install build dependencies
@@ -25,7 +25,7 @@ jobs:
               git zip curl wget rsync cpio libncurses5
 
       #------------------------------------------------------------
-      # 2. 소스·툴체인 클론
+      # 2. 소스·툴체인 클론
       #------------------------------------------------------------
       - run:
           name: Clone kernel repo and toolchains
@@ -45,50 +45,55 @@ jobs:
             ln -sf ../../../../clang-r383902               toolchain/clang/host/linux-x86/clang-r383902
 
       #------------------------------------------------------------
-      # 3. Python 2 → 3 print 문 수정
+      # 3. Python 2 → 3 print 수정
       #------------------------------------------------------------
       - run:
-          name: Patch gcc-wrapper (Python 3 print)
+          name: Patch gcc‑wrapper (Python 3 print)
           command: |
             sed -i 's/print >> sys.stderr, \(.*\)/print(\1, file=sys.stderr)/' \
-                kernel/scripts/gcc-wrapper.py || true
-      - run:
-    name: Create dummy Kconfig files
-    command: |
-      cd kernel
+              kernel/scripts/gcc-wrapper.py || true
 
-      if [ ! -f mm/sec_mm/Kconfig ]; then
-        mkdir -p mm/sec_mm
-        printf '%s\n' \
-          '# CI‑generated placeholder' \
-          'config SEC_MM' \
-          '        bool "Samsung Secure Memory (dummy)"' \
-          > mm/sec_mm/Kconfig
-      fi
-
-      if [ ! -f drivers/regulator/pmic_class/Kconfig ]; then
-        mkdir -p drivers/regulator/pmic_class
-        printf '%s\n' \
-          '# CI‑generated placeholder' \
-          'config REGULATOR_PMIC_CLASS' \
-          '        bool "PMIC class (dummy)"' \
-          > drivers/regulator/pmic_class/Kconfig
-      fi
       #------------------------------------------------------------
-      # 4. kconfig ‘conf’ 실행 파일 한 번만 빌드
+      # 4. 누락된 Kconfig 파일 더미 생성
+      #------------------------------------------------------------
+      - run:
+          name: Create dummy Kconfig files
+          command: |
+            cd kernel
+            # mm/sec_mm/Kconfig
+            if [ ! -f mm/sec_mm/Kconfig ]; then
+              mkdir -p mm/sec_mm
+              printf '%s\n' \
+                '# CI‑generated placeholder' \
+                'config SEC_MM' \
+                '        bool "Samsung Secure Memory (dummy)"' \
+                > mm/sec_mm/Kconfig
+            fi
+            # drivers/regulator/pmic_class/Kconfig
+            if [ ! -f drivers/regulator/pmic_class/Kconfig ]; then
+              mkdir -p drivers/regulator/pmic_class
+              printf '%s\n' \
+                '# CI‑generated placeholder' \
+                'config REGULATOR_PMIC_CLASS' \
+                '        bool "PMIC class (dummy)"' \
+                > drivers/regulator/pmic_class/Kconfig
+            fi
+
+      #------------------------------------------------------------
+      # 5. kconfig ‘conf’ 툴 빌드
       #------------------------------------------------------------
       - run:
           name: Build kconfig host tool (conf)
           command: |
             set -e
             cd kernel
-            make HOSTCC=gcc scripts/kconfig/conf    # ← 여기서 conf 생성
+            make HOSTCC=gcc scripts/kconfig/conf
 
       #------------------------------------------------------------
-      # 5. 실제 커널 두 번(out-stock / out-gsi) 빌드
+      # 6. 커널(out‑stock) 빌드
       #------------------------------------------------------------
       - run:
-          name: Build kernels
+          name: Build stock kernel
           command: |
             set -e
             cd kernel
@@ -98,31 +103,18 @@ jobs:
             export CROSS_COMPILE_COMPAT=arm-linux-androideabi-
             export PATH="$PWD/toolchain/clang/host/linux-x86/clang-r383902/bin:$PWD/toolchain/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin:$PWD/toolchain/gcc/linux-x86/arm/arm-linux-androideabi-4.9/bin:$PATH"
 
-            build_once () {
-              local OUT=$1
-              cp arch/arm64/configs/r3q_kor_single_defconfig .config
-              scripts/kconfig/conf --olddefconfig Kconfig
-              mkdir -p "$OUT"
-              cp .config "$OUT"
-              make O="$OUT" -j"$(nproc)"
-            }
-
-            build_once out-stock
-
-            # GSI 패치는 충돌 발생 시 무시하고 진행
-            git apply --ignore-space-change --reject gsi-commits.patch || true
-
-            build_once out-gsi
+            cp arch/arm64/configs/r3q_kor_single_defconfig .config
+            scripts/kconfig/conf --olddefconfig Kconfig
+            mkdir -p out-stock
+            cp .config out-stock
+            make O=out-stock -j"$(nproc)"
 
       #------------------------------------------------------------
-      # 6. 아티팩트 저장
+      # 7. 아티팩트 저장
       #------------------------------------------------------------
       - store_artifacts:
           path: kernel/out-stock
           destination: stock-build
-      - store_artifacts:
-          path: kernel/out-gsi
-          destination: gsi-build
 
 workflows:
   version: 2
