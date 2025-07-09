@@ -53,18 +53,29 @@ jobs:
             sed -i 's/print >> sys.stderr, \(.*\)/print(\1, file=sys.stderr)/' \
                 kernel/scripts/gcc-wrapper.py || true
       - run:
-          name: Create dummy mm/sec_mm/Kconfig
-          command: |
-            cd kernel
-            if [ ! -f mm/sec_mm/Kconfig ]; then
-              mkdir -p mm/sec_mm
-              # 더미 내용 기록
-              printf '%s\n' \
-                '# Placeholder created by CI' \
-                'menu "Samsung Secure Memory (dummy)"' \
-                'endmenu' \
-                > mm/sec_mm/Kconfig
-            fi
+    name: Create dummy Kconfig files
+    command: |
+      cd kernel
+
+      # ① mm/sec_mm/Kconfig  -----------------------------------
+      if [ ! -f mm/sec_mm/Kconfig ]; then
+        mkdir -p mm/sec_mm
+        printf '%s\n' \
+          '# CI‑generated placeholder' \
+          'config SEC_MM' \
+          '        bool "Samsung Secure Memory (dummy)"' \
+          > mm/sec_mm/Kconfig
+      fi
+
+      # ② drivers/regulator/pmic_class/Kconfig  -----------------
+      if [ ! -f drivers/regulator/pmic_class/Kconfig ]; then
+        mkdir -p drivers/regulator/pmic_class
+        printf '%s\n' \
+          '# CI‑generated placeholder' \
+          'config REGULATOR_PMIC_CLASS' \
+          '        bool "PMIC class (dummy)"' \
+          > drivers/regulator/pmic_class/Kconfig
+      fi
       #------------------------------------------------------------
       # 4. kconfig ‘conf’ 실행 파일 한 번만 빌드
       #------------------------------------------------------------
