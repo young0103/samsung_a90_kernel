@@ -42,14 +42,14 @@ jobs:
           command: |
             cd kernel/scripts/kconfig
 
-            # (1) 라이브러리 생성 규칙이 없으면 삽입
+            # -------- --------
             grep -q '^hostlibs-y *= *libkconfig' Makefile || \
               sed -i '/^hostprogs-y.*/a hostlibs-y := libkconfig' Makefile
 
             grep -q '^libkconfig-objs' Makefile || \
               echo 'libkconfig-objs := confdata.o expr.o lexer.o preprocess.o symbol.o util.o menu.o' >> Makefile
 
-            # (2) conf‑objs 에 라이브러리 링크 지시 추가
+            # ----- --------
             if grep -q '^conf-objs' Makefile ; then
               grep -q 'libkconfig' Makefile || \
                 sed -i 's/^conf-objs.*/& libkconfig/' Makefile
