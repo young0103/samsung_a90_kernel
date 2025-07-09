@@ -211,8 +211,12 @@ gconf-objs	:= gconf.o zconf.tab.o
 
 hostprogs-y := conf nconf mconf kxgettext qconf gconf
 hostlibs-y  := libkconfig 
-
 libkconfig-objs := confdata.o expr.o lexer.o preprocess.o symbol.o util.o menu.o 
+
+# ---------- upstream link rule ----------
+conf-objs := conf.o zconf.tab.o
+conf: $(conf-objs) libkconfig.a
+$(HOSTCC) -o $@ $^
 clean-files	:= qconf.moc .tmp_qtcheck .tmp_gtkcheck
 clean-files	+= zconf.tab.c zconf.lex.c gconf.glade.h
 clean-files     += config.pot linux.pot
