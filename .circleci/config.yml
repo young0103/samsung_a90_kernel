@@ -88,9 +88,12 @@ jobs:
 
             build_once () {
               local OUT=$1
-              local SRC="$PWD"           
-              cp "$SRC/arch/arm64/configs/r3q_kor_single_defconfig" "$SRC/.config"
-              make -C "$SRC" ARCH=arm64 olddefconfig  
+              local SRC="$PWD"
+
+              # ① defconfig 생성(소스 트리)  ← olddefconfig 제거
+              make -C "$SRC" ARCH=arm64 r3q_kor_single_defconfig
+
+              # ② out‑of‑tree 빌드
               mkdir -p "$OUT"
               cp "$SRC/.config" "$OUT"
               make -C "$SRC" O="$OUT" -j"$(nproc)"
@@ -99,13 +102,6 @@ jobs:
             build_once out-stock
             git apply gsi-commits.patch
             build_once out-gsi
-
-      - store_artifacts:
-          path: kernel/out-stock
-          destination: stock-build
-      - store_artifacts:
-          path: kernel/out-gsi
-          destination: gsi-build
 
 workflows:
   version: 2
