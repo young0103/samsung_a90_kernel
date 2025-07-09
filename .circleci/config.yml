@@ -41,8 +41,7 @@ jobs:
           name: Patch kconfig Makefile (add libkconfig rule)
           command: |
             cd kernel
-            grep -q "hostlibs-y.*libkconfig" scripts/kconfig/Makefile && exit 0
-            patch -p1 \<<'EOF'
+            patch -N -p1 \<<'EOF' || true
             --- a/scripts/kconfig/Makefile
             +++ b/scripts/kconfig/Makefile
             @@
@@ -69,16 +68,17 @@ jobs:
             export LLVM=1
             export CROSS_COMPILE=aarch64-linux-android-
             export CROSS_COMPILE_COMPAT=arm-linux-androideabi-
-            export PATH="$PWD/toolchain/clang/host/linux-x86/clang-r383902/bin: $PWD/toolchain/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin: $PWD/toolchain/gcc/linux-x86/arm/arm-linux-androideabi-4.9/bin:$PATH"
-
+            export PATH="$PWD/toolchain/clang/host/linux-x86/clang-r383902/bin:\
+$PWD/toolchain/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin:\
+$PWD/toolchain/gcc/linux-x86/arm/arm-linux-androideabi-4.9/bin:$PATH"
             build_once () {
               local OUT=$1
-              # host kconfig tools (no Qt)
-              make -C scripts/kconfig HOSTCC=gcc libkconfig conf
+              # host kconfig tools (Qt 없이)
+              make -C scripts/kconfig HOSTCC=gcc conf
               # .config 생성
               cp arch/arm64/configs/r3q_kor_single_defconfig .config
               scripts/kconfig/conf --syncconfig Kconfig
-              # 빌드
+              # 커널(out‑of‑tree) 빌드
               mkdir -p "$OUT"
               cp .config "$OUT"
               make O="$OUT" -j"$(nproc)"
