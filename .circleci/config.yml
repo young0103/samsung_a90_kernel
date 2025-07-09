@@ -91,7 +91,7 @@ jobs:
               local SRC="$PWD"
             
               # 0) host kconfig tools 빌드 (conf 생성)
-              make -C "$SRC" HOSTCC=gcc scripts/kconfig/conf
+              make -C "$SRC" HOSTCC=gcc scripts/kconfig
             
               # 1) defconfig → .config
               cp "$SRC/arch/arm64/configs/r3q_kor_single_defconfig" "$SRC/.config"
