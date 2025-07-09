@@ -1,5 +1,4 @@
 version: 2.1
-
 executors:
   kernel-exec:
     docker:
@@ -12,106 +11,21 @@ jobs:
   build-kernel:
     executor: kernel-exec
     steps:
-      - run:
-          name: Install build deps
-          command: |
-            sudo apt-get update
-            sudo apt-get install -y \
-              build-essential bc bison flex libssl-dev \
-              git zip curl wget rsync cpio libncurses5
+      - run: { name: Install build deps, command: | … }
+      - run: { name: Clone kernel repo & toolchains, command: | … }
 
-      - run:
-          name: Clone kernel repo & toolchains
-          command: |
-            set -e
-            git clone --depth=1 --branch stock_a90 \
-              https://github.com/young0103/samsung_a90_kernel kernel
-            cd kernel
+      # (선택) 1단계 패치 – 이미 라인이 있으면 이 스텝은 건너뜀
+      - run: { name: Patch kconfig Makefile, command: | <위 apply_patch 블록> }
 
-            # --- helper: 기존 경로 삭제 후 clone -----------------
-            force_clone () {
-              local url=$1
-              local dir=$2
-              rm -rf "$dir"            # ← 디렉터리·파일·심볼릭링크 모두 삭제
-              git clone --depth=1 "$url" "$dir"
-            }
+      - run: { name: Patch gcc-wrapper, command: | … }
 
-            # GCC 64‑bit
-            force_clone \
-              https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 \
-              aarch64-linux-android-4.9
+      # 2단계 build_once() 포함
+      - run: { name: Build kernels, command: | <위 build_once 블록> }
 
-            # GCC 32‑bit
-            force_clone \
-              https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 \
-              arm-linux-androideabi-4.9
-
-            # Clang
-            force_clone \
-              https://github.com/prorooter007/android_prebuilts_clang_host_linux-x86_clang-6877366 \
-              clang-r383902
-
-            # AnyKernel3
-            force_clone \
-              https://github.com/osm0sis/AnyKernel3 \
-              AnyKernel3
-
-            # toolchain 심볼릭 링크 (기존 코드 그대로)
-            mkdir -p toolchain/gcc/linux-x86/{aarch64,arm} \
-                     toolchain/clang/host/linux-x86
-            ln -sf ../../../../aarch64-linux-android-4.9 \
-              toolchain/gcc/linux-x86/aarch64/aarch64-linux-android-4.9
-            ln -sf ../../../../arm-linux-androideabi-4.9 \
-              toolchain/gcc/linux-x86/arm/arm-linux-androideabi-4.9
-            ln -sf ../../../../clang-r383902 \
-              toolchain/clang/host/linux-x86/clang-r383902
-
-      - run:
-          name: Patch gcc-wrapper
-          command: |
-            sed -i 's/print >> sys.stderr, \(.*\)/print(\1, file=sys.stderr)/' \
-                kernel/scripts/gcc-wrapper.py
-
-      - run:
-          name: Build kernels
-          command: |
-            set -e
-            cd kernel
-            export ARCH=arm64
-            export CC=clang
-            export LLVM=1
-            export CROSS_COMPILE=aarch64-linux-android-
-            export CROSS_COMPILE_COMPAT=arm-linux-androideabi-
-            export PATH="$PWD/toolchain/clang/host/linux-x86/clang-r383902/bin:\
-            $PWD/toolchain/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin:\
-            $PWD/toolchain/gcc/linux-x86/arm/arm-linux-androideabi-4.9/bin:$PATH"
-
-            build_once () {
-              local OUT=$1
-              local SRC="$PWD"
-            
-              # 0) kconfig 호스트 툴 순차 빌드 (lkc → conf)
-              make -C "$SRC/scripts/kconfig" HOSTCC=gcc lkc
-              make -C "$SRC/scripts/kconfig" HOSTCC=gcc conf
-            
-              # 1) defconfig → .config
-              cp "$SRC/arch/arm64/configs/r3q_kor_single_defconfig" "$SRC/.config"
-            
-              # 2) 옵션 동기화
-              "$SRC/scripts/kconfig/conf" --syncconfig "$SRC/Kconfig"
-            
-              # 3) out‑of‑tree 빌드
-              mkdir -p "$OUT"
-              cp "$SRC/.config" "$OUT"
-              make -C "$SRC" O="$OUT" -j"$(nproc)"
-            }
-
-            build_once out-stock
-            git apply gsi-commits.patch
-            build_once out-gsi
+      - store_artifacts: { path: kernel/out-stock, destination: stock-build }
+      - store_artifacts: { path: kernel/out-gsi,   destination: gsi-build }
 
 workflows:
   version: 2
   build-and-upload:
-    jobs:
-      - build-kernel
+    jobs: [build-kernel]
