@@ -46,9 +46,7 @@ jobs:
             grep -q "hostlibs-y.*libkconfig" Makefile && exit 0
 
             # hostprogs-y 바로 아래에 두 줄 삽입
-            sed -i '/hostprogs-y.*/a \
-            hostlibs-y  := libkconfig\n\
-            libkconfig-objs := confdata.o expr.o lexer.o preprocess.o symbol.o util.o menu.o' Makefile
+            sed -i '/^hostprogs-y.*/a hostlibs-y := libkconfig\nlibkconfig-objs := confdata.o expr.o lexer.o preprocess.o symbol.o util.o menu.o' Makefile
 
 
 
@@ -74,7 +72,7 @@ jobs:
               local OUT=$1
             
               # 0) 라이브러리와 conf 빌드
-              make -C scripts/kconfig HOSTCC=gcc libkconfig conf
+              make -C scripts/kconfig HOSTCC=gcc libkconfig.a conf
             
               # 1) defconfig → .config
               cp arch/arm64/configs/r3q_kor_single_defconfig .config
