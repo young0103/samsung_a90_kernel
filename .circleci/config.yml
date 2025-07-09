@@ -90,12 +90,16 @@ jobs:
               local OUT=$1
               local SRC="$PWD"
             
+              # 0) host kconfig tools 빌드 (conf 생성)
+              make -C "$SRC" HOSTCC=gcc scripts/kconfig/conf
+            
+              # 1) defconfig → .config
               cp "$SRC/arch/arm64/configs/r3q_kor_single_defconfig" "$SRC/.config"
             
-              # Kconfig 툴로 종속 옵션 채우기
-              "$SRC/scripts/kconfig/conf" --defconfig="$SRC/.config" "$SRC/Kconfig"
-              "$SRC/scripts/kconfig/conf" --syncconfig            "$SRC/Kconfig"
+              # 2) 옵션 채우기 (syncconfig와 동일 효과)
+              "$SRC/scripts/kconfig/conf" --syncconfig "$SRC/Kconfig"
             
+              # 3) out‑of‑tree 빌드
               mkdir -p "$OUT"
               cp "$SRC/.config" "$OUT"
               make -C "$SRC" O="$OUT" -j"$(nproc)"
