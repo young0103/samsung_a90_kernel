@@ -41,10 +41,11 @@ jobs:
           name: Patch kconfig Makefile (libkconfig build & link)
           command: |
             cd kernel/scripts/kconfig
+            sed -i 's/^conf-objs.*/conf-objs := conf.o zconf.tab.o/' Makefile
 
             # hostlibs-y
-            grep -q '^hostlibs-y *= *libkconfig' Makefile || \
-              sed -i '/^hostprogs-y.*/a hostlibs-y := libkconfig' Makefile
+            grep -q "^conf: .*libkconfig" Makefile || \
+            printf 'conf: $(conf-objs) libkconfig.a\n\t$(HOSTCC) -o $@ $^\n' >> Makefile
 
             # libkconfig-objs
             grep -q '^libkconfig-objs' Makefile || \
