@@ -81,7 +81,7 @@ jobs:
               local OUT=$1
             
               # 0) 라이브러리와 conf 빌드
-              make -C scripts/kconfig HOSTCC=gcc conf
+              make HOSTCC=gcc scripts/kconfig/conf
             
               # 1) defconfig → .config
               cp arch/arm64/configs/r3q_kor_single_defconfig .config
