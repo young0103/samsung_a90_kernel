@@ -38,16 +38,22 @@ jobs:
             ln -sf ../../../../clang-r383902               toolchain/clang/host/linux-x86/clang-r383902
 
       - run:
-          name: Patch kconfig Makefile (link libkconfig into conf)
+          name: Patch kconfig Makefile (libkconfig build & link)
           command: |
             cd kernel/scripts/kconfig
-            # 이미 들어 있으면 건너뜀
-            grep -q "^conf-objs .*libkconfig" Makefile && exit 0
-            # conf-objs 라인 존재 → libkconfig 덧붙이기
-            if grep -q "^conf-objs" Makefile ; then
-              sed -i 's/^conf-objs.*/& libkconfig/' Makefile
+
+            # (1) 라이브러리 생성 규칙이 없으면 삽입
+            grep -q '^hostlibs-y *= *libkconfig' Makefile || \
+              sed -i '/^hostprogs-y.*/a hostlibs-y := libkconfig' Makefile
+
+            grep -q '^libkconfig-objs' Makefile || \
+              echo 'libkconfig-objs := confdata.o expr.o lexer.o preprocess.o symbol.o util.o menu.o' >> Makefile
+
+            # (2) conf‑objs 에 라이브러리 링크 지시 추가
+            if grep -q '^conf-objs' Makefile ; then
+              grep -q 'libkconfig' Makefile || \
+                sed -i 's/^conf-objs.*/& libkconfig/' Makefile
             else
-              # conf-objs 라인이 없으면 새로 추가
               echo 'conf-objs := conf.o zconf.tab.o libkconfig' >> Makefile
             fi
 
