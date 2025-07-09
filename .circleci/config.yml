@@ -57,7 +57,6 @@ jobs:
     command: |
       cd kernel
 
-      # ① mm/sec_mm/Kconfig  -----------------------------------
       if [ ! -f mm/sec_mm/Kconfig ]; then
         mkdir -p mm/sec_mm
         printf '%s\n' \
@@ -67,7 +66,6 @@ jobs:
           > mm/sec_mm/Kconfig
       fi
 
-      # ② drivers/regulator/pmic_class/Kconfig  -----------------
       if [ ! -f drivers/regulator/pmic_class/Kconfig ]; then
         mkdir -p drivers/regulator/pmic_class
         printf '%s\n' \
