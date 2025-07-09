@@ -1,3 +1,4 @@
+# .circleci/config.yml
 version: 2.1
 
 executors:
@@ -12,6 +13,9 @@ jobs:
   build-kernel:
     executor: kernel-exec
     steps:
+      #------------------------------------------------------------
+      # 1. 빌드용 패키지 설치
+      #------------------------------------------------------------
       - run:
           name: Install build dependencies
           command: |
@@ -20,6 +24,9 @@ jobs:
               build-essential bc bison flex libssl-dev \
               git zip curl wget rsync cpio libncurses5
 
+      #------------------------------------------------------------
+      # 2. 소스·툴체인 클론
+      #------------------------------------------------------------
       - run:
           name: Clone kernel repo and toolchains
           command: |
@@ -37,56 +44,44 @@ jobs:
             ln -sf ../../../../arm-linux-androideabi-4.9   toolchain/gcc/linux-x86/arm/arm-linux-androideabi-4.9
             ln -sf ../../../../clang-r383902               toolchain/clang/host/linux-x86/clang-r383902
 
+      #------------------------------------------------------------
+      # 3. Python 2 → 3 print 문 수정
+      #------------------------------------------------------------
       - run:
-          name: Patch kconfig Makefile (libkconfig build & link)
-          command: |
-            cd kernel/scripts/kconfig
-            sed -i 's/^conf-objs.*/conf-objs := conf.o zconf.tab.o/' Makefile
-
-            # hostlibs-y
-            grep -q "^conf: .*libkconfig" Makefile || \
-              printf 'conf: $(conf-objs) libkconfig.a\n\t$(HOSTCC) -o $@ $^\n' >> Makefile
-
-            # libkconfig-objs
-            grep -q '^libkconfig-objs' Makefile || \
-              echo 'libkconfig-objs := confdata.o expr.o lexer.o preprocess.o symbol.o util.o menu.o' >> Makefile
-
-            if grep -q '^conf-objs' Makefile ; then
-              grep -q 'libkconfig' Makefile || \
-                sed -i 's/^conf-objs.*/& libkconfig/' Makefile
-            else
-              echo 'conf-objs := conf.o zconf.tab.o libkconfig' >> Makefile
-            fi
-
-
-      - run:
-          name: Patch gcc-wrapper (Python 3 print)
+          name: Patch gcc-wrapper (Python 3 print)
           command: |
             sed -i 's/print >> sys.stderr, \(.*\)/print(\1, file=sys.stderr)/' \
                 kernel/scripts/gcc-wrapper.py || true
 
+      #------------------------------------------------------------
+      # 4. kconfig ‘conf’ 실행 파일 한 번만 빌드
+      #------------------------------------------------------------
+      - run:
+          name: Build kconfig host tool (conf)
+          command: |
+            set -e
+            cd kernel
+            make HOSTCC=gcc scripts/kconfig/conf    # ← 여기서 conf 생성
+
+      #------------------------------------------------------------
+      # 5. 실제 커널 두 번(out-stock / out-gsi) 빌드
+      #------------------------------------------------------------
       - run:
           name: Build kernels
           command: |
             set -e
             cd kernel
             export ARCH=arm64
-            export CC=clang
-            export LLVM=1
+            export CC=clang LLVM=1
             export CROSS_COMPILE=aarch64-linux-android-
             export CROSS_COMPILE_COMPAT=arm-linux-androideabi-
             export PATH="$PWD/toolchain/clang/host/linux-x86/clang-r383902/bin:$PWD/toolchain/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin:$PWD/toolchain/gcc/linux-x86/arm/arm-linux-androideabi-4.9/bin:$PATH"
 
             build_once () {
               local OUT=$1
-            
-              # 0) 라이브러리와 conf 빌드
-              make HOSTCC=gcc scripts/kconfig/conf
-            
               # 1) defconfig → .config
               cp arch/arm64/configs/r3q_kor_single_defconfig .config
               scripts/kconfig/conf --syncconfig Kconfig
-            
               # 2) 커널(out‑of‑tree) 빌드
               mkdir -p "$OUT"
               cp .config "$OUT"
@@ -97,6 +92,9 @@ jobs:
             git apply gsi-commits.patch
             build_once out-gsi
 
+      #------------------------------------------------------------
+      # 6. 아티팩트 저장
+      #------------------------------------------------------------
       - store_artifacts:
           path: kernel/out-stock
           destination: stock-build
