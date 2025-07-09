@@ -90,22 +90,21 @@ jobs:
               local OUT=$1
               local SRC="$PWD"
             
-              # 0) host kconfig 툴•라이브러리 전체 빌드
-              make -C "$SRC/scripts/kconfig" HOSTCC=gcc libkconfig.a conf
+              # 0) kconfig 호스트 툴 순차 빌드 (lkc → conf)
+              make -C "$SRC/scripts/kconfig" HOSTCC=gcc lkc
+              make -C "$SRC/scripts/kconfig" HOSTCC=gcc conf
             
               # 1) defconfig → .config
               cp "$SRC/arch/arm64/configs/r3q_kor_single_defconfig" "$SRC/.config"
             
               # 2) 옵션 동기화
-              "$SRC/scripts/kconfig/conf" --defconfig="$SRC/.config" "$SRC/Kconfig"
-              "$SRC/scripts/kconfig/conf" --syncconfig              "$SRC/Kconfig"
+              "$SRC/scripts/kconfig/conf" --syncconfig "$SRC/Kconfig"
             
               # 3) out‑of‑tree 빌드
               mkdir -p "$OUT"
               cp "$SRC/.config" "$OUT"
               make -C "$SRC" O="$OUT" -j"$(nproc)"
             }
-
 
             build_once out-stock
             git apply gsi-commits.patch
