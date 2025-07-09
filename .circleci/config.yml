@@ -79,9 +79,11 @@ jobs:
 
             build_once () {
               local OUT=$1
+
               # 1) defconfig → .config
               cp arch/arm64/configs/r3q_kor_single_defconfig .config
-              scripts/kconfig/conf --syncconfig Kconfig
+              scripts/kconfig/conf --olddefconfig Kconfig   # ← 여기만 수정
+
               # 2) 커널(out‑of‑tree) 빌드
               mkdir -p "$OUT"
               cp .config "$OUT"
