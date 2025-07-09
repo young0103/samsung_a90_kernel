@@ -59,7 +59,7 @@ jobs:
             # 이미 있으면 건너뜀
             if [ ! -f mm/sec_mm/Kconfig ]; then
               mkdir -p mm/sec_mm
-              cat > mm/sec_mm/Kconfig <<'EOF'
+              cat > mm/sec_mm/Kconfig /<<'EOF'
               menu "Samsung Secure Memory (dummy)"
               endmenu
               EOF
