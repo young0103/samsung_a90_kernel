@@ -69,8 +69,9 @@ jobs:
             export CROSS_COMPILE=aarch64-linux-android-
             export CROSS_COMPILE_COMPAT=arm-linux-androideabi-
             export PATH="$PWD/toolchain/clang/host/linux-x86/clang-r383902/bin:\
-$PWD/toolchain/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin:\
-$PWD/toolchain/gcc/linux-x86/arm/arm-linux-androideabi-4.9/bin:$PATH"
+            $PWD/toolchain/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin:\
+            $PWD/toolchain/gcc/linux-x86/arm/arm-linux-androideabi-4.9/bin:$PATH"
+
             build_once () {
               local OUT=$1
               # host kconfig tools (Qt 없이)
