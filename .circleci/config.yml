@@ -38,16 +38,13 @@ jobs:
             ln -sf ../../../../clang-r383902               toolchain/clang/host/linux-x86/clang-r383902
 
       - run:
-          name: Patch kconfig Makefile (add libkconfig rule)
+          name: Patch kconfig Makefile
           command: |
             cd kernel/scripts/kconfig
-
-            # 이미 들어 있으면 건너뜀
-            grep -q "hostlibs-y.*libkconfig" Makefile && exit 0
-
-            # hostprogs-y 바로 아래에 두 줄 삽입
-            sed -i '/^hostprogs-y.*/a hostlibs-y := libkconfig\nlibkconfig-objs := confdata.o expr.o lexer.o preprocess.o symbol.o util.o menu.o' Makefile
-
+            grep -q "^hostlibs-y.*libkconfig" Makefile && exit 0
+            sed -i '/^hostprogs-y.*/a hostlibs-y := libkconfig' Makefile
+            echo 'libkconfig-objs := confdata.o expr.o lexer.o preprocess.o symbol.o util.o menu.o' \
+              >> Makefile
 
 
       - run:
@@ -72,7 +69,7 @@ jobs:
               local OUT=$1
             
               # 0) 라이브러리와 conf 빌드
-              make -C scripts/kconfig HOSTCC=gcc libkconfig.a conf
+              make -C scripts/kconfig HOSTCC=gcc conf
             
               # 1) defconfig → .config
               cp arch/arm64/configs/r3q_kor_single_defconfig .config
