@@ -71,7 +71,7 @@ jobs:
           command: |
             set -e
             cd kernel
-            export ARCH=arm64
+            export ARCH=arm64 SRCARCH=arm64
             export CC=clang LLVM=1
             export CROSS_COMPILE=aarch64-linux-android-
             export CROSS_COMPILE_COMPAT=arm-linux-androideabi-
@@ -79,19 +79,18 @@ jobs:
 
             build_once () {
               local OUT=$1
-
-              # 1) defconfig → .config
               cp arch/arm64/configs/r3q_kor_single_defconfig .config
-              scripts/kconfig/conf --olddefconfig Kconfig   # ← 여기만 수정
-
-              # 2) 커널(out‑of‑tree) 빌드
+              scripts/kconfig/conf --olddefconfig Kconfig
               mkdir -p "$OUT"
               cp .config "$OUT"
               make O="$OUT" -j"$(nproc)"
             }
 
             build_once out-stock
-            git apply gsi-commits.patch
+
+            # GSI 패치는 충돌 발생 시 무시하고 진행
+            git apply --ignore-space-change --reject gsi-commits.patch || true
+
             build_once out-gsi
 
       #------------------------------------------------------------
