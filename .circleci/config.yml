@@ -91,8 +91,7 @@ jobs:
               local SRC="$PWD"
             
               # 0) host kconfig 툴•라이브러리 전체 빌드
-              make -C "$SRC/scripts/kconfig" \
-                   HOSTCC=gcc HOSTCXX=g++ HOSTLD=ld -j"$(nproc)"
+              make -C "$SRC/scripts/kconfig" HOSTCC=gcc libkconfig.a conf
             
               # 1) defconfig → .config
               cp "$SRC/arch/arm64/configs/r3q_kor_single_defconfig" "$SRC/.config"
