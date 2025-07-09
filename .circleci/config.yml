@@ -90,16 +90,23 @@ jobs:
               local OUT=$1
               local SRC="$PWD"
             
-              # 1) .config 자동 생성 (conf·syncconfig 포함)
-              make -C "$SRC" ARCH=arm64 \
-                   KBUILD_DEFCONFIG=arch/arm64/configs/r3q_kor_single_defconfig \
-                   defconfig
+              # 0) host kconfig 툴•라이브러리 전체 빌드
+              make -C "$SRC/scripts/kconfig" \
+                   HOSTCC=gcc HOSTCXX=g++ HOSTLD=ld -j"$(nproc)"
             
-              # 2) out‑of‑tree 빌드
+              # 1) defconfig → .config
+              cp "$SRC/arch/arm64/configs/r3q_kor_single_defconfig" "$SRC/.config"
+            
+              # 2) 옵션 동기화
+              "$SRC/scripts/kconfig/conf" --defconfig="$SRC/.config" "$SRC/Kconfig"
+              "$SRC/scripts/kconfig/conf" --syncconfig              "$SRC/Kconfig"
+            
+              # 3) out‑of‑tree 빌드
               mkdir -p "$OUT"
               cp "$SRC/.config" "$OUT"
               make -C "$SRC" O="$OUT" -j"$(nproc)"
             }
+
 
             build_once out-stock
             git apply gsi-commits.patch
