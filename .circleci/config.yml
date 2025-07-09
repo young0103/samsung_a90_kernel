@@ -1,83 +1,72 @@
 version: 2.1
 
-# ───────────────────────── ① 공통 Executor ──────────────────────────
 executors:
   kernel-exec:
     docker:
-      - image: cimg/debian:stable          # apt 사용 가능, x86_64
+      - image: cimg/base:stable    
     environment:
       DEBIAN_FRONTEND: noninteractive
       TZ: Etc/UTC
 
-# ───────────────────────── ② Job 정의 ──────────────────────────────
 jobs:
   build-kernel:
     executor: kernel-exec
-
     steps:
-      # 1. (선택) 저장소 자체를 체크아웃 ? 필요 없으면 제거
       - checkout
 
-      # 2. 시스템 의존 패키지 설치 ─ Python?2 포함
       - run:
           name: Install build dependencies
           command: |
             sudo apt-get update
             sudo apt-get install -y \
-              python2 build-essential bc bison flex libssl-dev \
+              build-essential bc bison flex libssl-dev \
               git zip curl wget rsync cpio libncurses5
-            # python → python2 심볼릭 링크가 없으면 추가
-            command -v python || sudo ln -s /usr/bin/python2 /usr/bin/python
 
-      # 3. 커널 소스·툴체인·AnyKernel3 클론
       - run:
-          name: Clone kernel repo & toolchains
+          name: Clone kernel repo and toolchains
           command: |
             set -e
             git clone --depth=1 --branch stock_a90 \
               https://github.com/young0103/samsung_a90_kernel kernel
             cd kernel
-
-            # ─ GCC 64?bit
+            # GCC 64?bit
             git clone --depth=1 --branch android-11.0.0_r48 \
               https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 \
               aarch64-linux-android-4.9
-            # ─ GCC 32?bit (compat)
+            # GCC 32?bit
             git clone --depth=1 \
               https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 \
               arm-linux-androideabi-4.9
-            # ─ Clang
+            # Clang
             git clone --depth=1 \
               https://github.com/prorooter007/android_prebuilts_clang_host_linux-x86_clang-6877366 \
               clang-r383902
-            # ─ AnyKernel3
+            # AnyKernel3
             git clone --depth=1 https://github.com/osm0sis/AnyKernel3 AnyKernel3
 
-            # 3?1. 삼성 빌드 시스템이 찾는 toolchain/ 경로에 링크 생성
+            # toolchain/
             mkdir -p toolchain/gcc/linux-x86/{aarch64,arm} \
                      toolchain/clang/host/linux-x86
             ln -sf ../../../../aarch64-linux-android-4.9 \
-                  toolchain/gcc/linux-x86/aarch64/aarch64-linux-android-4.9
+              toolchain/gcc/linux-x86/aarch64/aarch64-linux-android-4.9
             ln -sf ../../../../arm-linux-androideabi-4.9 \
-                  toolchain/gcc/linux-x86/arm/arm-linux-androideabi-4.9
+              toolchain/gcc/linux-x86/arm/arm-linux-androideabi-4.9
             ln -sf ../../../../clang-r383902 \
-                  toolchain/clang/host/linux-x86/clang-r383902
+              toolchain/clang/host/linux-x86/clang-r383902
 
-      # 4. (옵션) gcc-wrapper.py 한 줄 패치 ? Python?3에서도 동작하도록
+
       - run:
-          name: Patch gcc-wrapper for Python?3 compatibility
+          name: Patch gcc-wrapper for Python3
           command: |
             sed -i 's/print >> sys.stderr, \(.*\)/print(\1, file=sys.stderr)/' \
                 kernel/scripts/gcc-wrapper.py
 
-      # 5. 커널 빌드 ? stock + GSI 두 번
       - run:
-          name: Build stock + GSI kernels
+          name: Build kernels
           command: |
             set -e
             cd kernel
 
-            # ─ 공통 환경 변수
             export ARCH=arm64
             export CC=clang
             export LLVM=1
@@ -87,36 +76,19 @@ jobs:
             $PWD/toolchain/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin:\
             $PWD/toolchain/gcc/linux-x86/arm/arm-linux-androideabi-4.9/bin:$PATH"
 
-            # -------- 함수: 한 번 빌드하는 절차 ----------
             build_once () {
               local OUT=$1
-              local DEFCONFIG=r3q_kor_single_defconfig
-
-              echo "=== Generate .config from $DEFCONFIG ==="
-              cp arch/arm64/configs/$DEFCONFIG .config
+              cp arch/arm64/configs/r3q_kor_single_defconfig .config
               make olddefconfig
-
               mkdir -p "$OUT"
               cp .config "$OUT"
-
-              echo "=== Compile kernel ⇒ $OUT ==="
               make -C "$PWD" O="$OUT" -j"$(nproc)"
-
-              # Image 검증
-              test -f "$OUT/arch/arm64/boot/Image" || \
-                { echo "Image missing!"; exit 1; }
             }
 
-            # 5?1. Stock 빌드
             build_once out-stock
-
-            # 5?2. GSI 패치 적용
             git apply gsi-commits.patch
-
-            # 5?3. GSI 빌드
             build_once out-gsi
 
-      # 6. 결과물 보관 (CircleCI Artifacts)
       - store_artifacts:
           path: kernel/out-stock
           destination: stock-build
@@ -124,7 +96,6 @@ jobs:
           path: kernel/out-gsi
           destination: gsi-build
 
-# ───────────────────────── ③ 워크플로 ────────────────────────────
 workflows:
   version: 2
   build-and-upload:
