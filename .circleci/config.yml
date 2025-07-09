@@ -88,11 +88,12 @@ jobs:
 
             build_once () {
               local OUT=$1
-              cp arch/arm64/configs/r3q_kor_single_defconfig .config
-              make olddefconfig
+              local SRC="$PWD"           
+              cp "$SRC/arch/arm64/configs/r3q_kor_single_defconfig" "$SRC/.config"
+              make -C "$SRC" ARCH=arm64 olddefconfig  
               mkdir -p "$OUT"
-              cp .config "$OUT"
-              make -C "$PWD" O="$OUT" -j"$(nproc)"
+              cp "$SRC/.config" "$OUT"
+              make -C "$SRC" O="$OUT" -j"$(nproc)"
             }
 
             build_once out-stock
