@@ -90,13 +90,12 @@ jobs:
               local OUT=$1
               local SRC="$PWD"
             
-              # 1) defconfig → .config 복사
               cp "$SRC/arch/arm64/configs/r3q_kor_single_defconfig" "$SRC/.config"
             
-              # 2) 새 옵션 채우기  (oldconfig → syncconfig 로 교체)
-              make -C "$SRC" ARCH=arm64 syncconfig
+              # Kconfig 툴로 종속 옵션 채우기
+              "$SRC/scripts/kconfig/conf" --defconfig="$SRC/.config" "$SRC/Kconfig"
+              "$SRC/scripts/kconfig/conf" --syncconfig            "$SRC/Kconfig"
             
-              # 3) out‑of‑tree 빌드
               mkdir -p "$OUT"
               cp "$SRC/.config" "$OUT"
               make -C "$SRC" O="$OUT" -j"$(nproc)"
