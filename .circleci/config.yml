@@ -42,7 +42,7 @@ jobs:
           command: |
             cd kernel
             grep -q "hostlibs-y.*libkconfig" scripts/kconfig/Makefile && exit 0
-            patch -p1 <<'EOF'
+            patch -p1 \<<'EOF'
             --- a/scripts/kconfig/Makefile
             +++ b/scripts/kconfig/Makefile
             @@
