@@ -40,17 +40,14 @@ jobs:
       - run:
           name: Patch kconfig Makefile (add libkconfig rule)
           command: |
-            cd kernel
-            patch -N -p1 \<<'EOF' || true
-            --- a/scripts/kconfig/Makefile
-            +++ b/scripts/kconfig/Makefile
-            @@
-            -hostprogs-y := conf nconf mconf kxgettext qconf gconf
-            +hostprogs-y := conf nconf mconf kxgettext qconf gconf
-            +hostlibs-y  := libkconfig
-            +
-            +libkconfig-objs := confdata.o expr.o lexer.o preprocess.o symbol.o util.o menu.o
-            EOF
+            cd kernel/scripts/kconfig
+            grep -q "hostlibs-y.*libkconfig" Makefile && exit 0
+            # hostlibs-y 줄 추가
+            sed -i '/hostprogs-y.*/a hostlibs-y  := libkconfig' Makefile
+            # libkconfig-objs 줄 추가
+            grep -q "libkconfig-objs" Makefile || \
+              echo 'libkconfig-objs := confdata.o expr.o lexer.o preprocess.o symbol.o util.o menu.o' >> Makefile
+
 
       - run:
           name: Patch gcc-wrapper (Python 3 print)
@@ -69,19 +66,16 @@ jobs:
             export CROSS_COMPILE=aarch64-linux-android-
             export CROSS_COMPILE_COMPAT=arm-linux-androideabi-
             export PATH="$PWD/toolchain/clang/host/linux-x86/clang-r383902/bin:\
-$PWD/toolchain/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin:\
-$PWD/toolchain/gcc/linux-x86/arm/arm-linux-androideabi-4.9/bin:$PATH"
+            $PWD/toolchain/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin:\
+            $PWD/toolchain/gcc/linux-x86/arm/arm-linux-androideabi-4.9/bin:$PATH"
 
             build_once () {
               local OUT=$1
-            
-              # 0) kconfig host tools 빌드  (라이브러리 + conf)
-              make -C scripts/kconfig HOSTCC=gcc libkconfig.a conf   # ← .a 확장자 추가
-            
-              # 1) 기본 설정
+              # 0) host kconfig tools (conf → libkconfig.a 자동 생성)
+              make -C scripts/kconfig HOSTCC=gcc conf
+              # 1) defconfig → .config
               cp arch/arm64/configs/r3q_kor_single_defconfig .config
               scripts/kconfig/conf --syncconfig Kconfig
-            
               # 2) 커널(out‑of‑tree) 빌드
               mkdir -p "$OUT"
               cp .config "$OUT"
