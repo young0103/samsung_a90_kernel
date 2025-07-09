@@ -26,8 +26,11 @@ jobs:
           name: Clone kernel repo and toolchains
           command: |
             set -e
-            git clone --depth=1 --branch stock_a90 \
-              https://github.com/young0103/samsung_a90_kernel kernel
+            if [ ! -d kernel/.git ]; then
+              git clone --depth=1 --branch stock_a90 \https://github.com/young0103/samsung_a90_kernel kernel
+            else
+              echo "kernel/ already present ? skipping clone"
+            fi
             cd kernel
             # GCC 64?bit
             git clone --depth=1 --branch android-11.0.0_r48 \
