@@ -60,9 +60,9 @@ jobs:
             if [ ! -f mm/sec_mm/Kconfig ]; then
               mkdir -p mm/sec_mm
               cat > mm/sec_mm/Kconfig <<'EOF'
-menu "Samsung Secure Memory (dummy)"
-endmenu
-EOF
+              menu "Samsung Secure Memory (dummy)"
+              endmenu
+              EOF
             fi
       #------------------------------------------------------------
       # 4. kconfig ‘conf’ 실행 파일 한 번만 빌드
