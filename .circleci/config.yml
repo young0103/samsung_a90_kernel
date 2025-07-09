@@ -28,35 +28,35 @@ jobs:
               https://github.com/young0103/samsung_a90_kernel kernel
             cd kernel
 
-            clone_if_absent () {
+            # --- helper: 기존 경로 삭제 후 clone -----------------
+            force_clone () {
               local url=$1
               local dir=$2
-              if [ -e "$dir" ] && [ ! -d "$dir/.git" ]; then
-                rm -rf "$dir"
-              fi
-              if [ ! -d "$dir/.git" ]; then
-                git clone --depth=1 "$url" "$dir"
-              else
-                echo "[SKIP] $dir already cloned"
-              fi
+              rm -rf "$dir"            # ← 디렉터리·파일·심볼릭링크 모두 삭제
+              git clone --depth=1 "$url" "$dir"
             }
 
-            clone_if_absent \
+            # GCC 64‑bit
+            force_clone \
               https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 \
               aarch64-linux-android-4.9
 
-            clone_if_absent \
+            # GCC 32‑bit
+            force_clone \
               https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 \
               arm-linux-androideabi-4.9
 
-            clone_if_absent \
+            # Clang
+            force_clone \
               https://github.com/prorooter007/android_prebuilts_clang_host_linux-x86_clang-6877366 \
               clang-r383902
 
-            clone_if_absent \
+            # AnyKernel3
+            force_clone \
               https://github.com/osm0sis/AnyKernel3 \
               AnyKernel3
 
+            # toolchain 심볼릭 링크 (기존 코드 그대로)
             mkdir -p toolchain/gcc/linux-x86/{aarch64,arm} \
                      toolchain/clang/host/linux-x86
             ln -sf ../../../../aarch64-linux-android-4.9 \
