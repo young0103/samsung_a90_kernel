@@ -74,12 +74,15 @@ jobs:
 
             build_once () {
               local OUT=$1
-              # host kconfig tools (Qt 없이)
-              make -C scripts/kconfig HOSTCC=gcc conf
-              # .config 생성
+            
+              # 0) kconfig host tools 빌드  (라이브러리 + conf)
+              make -C scripts/kconfig HOSTCC=gcc libkconfig.a conf   # ← .a 확장자 추가
+            
+              # 1) 기본 설정
               cp arch/arm64/configs/r3q_kor_single_defconfig .config
               scripts/kconfig/conf --syncconfig Kconfig
-              # 커널(out‑of‑tree) 빌드
+            
+              # 2) 커널(out‑of‑tree) 빌드
               mkdir -p "$OUT"
               cp .config "$OUT"
               make O="$OUT" -j"$(nproc)"
