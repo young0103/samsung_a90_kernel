@@ -45,7 +45,7 @@ jobs:
 
             # hostlibs-y
             grep -q "^conf: .*libkconfig" Makefile || \
-            printf 'conf: $(conf-objs) libkconfig.a\n\t$(HOSTCC) -o $@ $^\n' >> Makefile
+              printf 'conf: $(conf-objs) libkconfig.a\n\t$(HOSTCC) -o $@ $^\n' >> Makefile
 
             # libkconfig-objs
             grep -q '^libkconfig-objs' Makefile || \
