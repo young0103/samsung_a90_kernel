@@ -3,7 +3,7 @@ version: 2.1
 executors:
   kernel-exec:
     docker:
-      - image: cimg/base:stable    
+      - image: cimg/base:stable
     environment:
       DEBIAN_FRONTEND: noninteractive
       TZ: Etc/UTC
@@ -12,9 +12,8 @@ jobs:
   build-kernel:
     executor: kernel-exec
     steps:
-
       - run:
-          name: Install build dependencies
+          name: Install build deps
           command: |
             sudo apt-get update
             sudo apt-get install -y \
@@ -22,27 +21,42 @@ jobs:
               git zip curl wget rsync cpio libncurses5
 
       - run:
-          name: Clone kernel repo and toolchains
+          name: Clone kernel repo & toolchains
           command: |
             set -e
-            git clone --depth=1 --branch stock_a90 https://github.com/young0103/samsung_a90_kernel kernel
+            git clone --depth=1 --branch stock_a90 \
+              https://github.com/young0103/samsung_a90_kernel kernel
             cd kernel
-            # GCC 64?bit
-            git clone --depth=1 --branch android-11.0.0_r48 \
+
+            clone_if_absent () {
+              local url=$1
+              local dir=$2
+              if [ -e "$dir" ] && [ ! -d "$dir/.git" ]; then
+                rm -rf "$dir"
+              fi
+              if [ ! -d "$dir/.git" ]; then
+                git clone --depth=1 "$url" "$dir"
+              else
+                echo "[SKIP] $dir already cloned"
+              fi
+            }
+
+            clone_if_absent \
               https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 \
               aarch64-linux-android-4.9
-            # GCC 32?bit
-            git clone --depth=1 \
+
+            clone_if_absent \
               https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 \
               arm-linux-androideabi-4.9
-            # Clang
-            git clone --depth=1 \
+
+            clone_if_absent \
               https://github.com/prorooter007/android_prebuilts_clang_host_linux-x86_clang-6877366 \
               clang-r383902
-            # AnyKernel3
-            git clone --depth=1 https://github.com/osm0sis/AnyKernel3 AnyKernel3
 
-            # toolchain/
+            clone_if_absent \
+              https://github.com/osm0sis/AnyKernel3 \
+              AnyKernel3
+
             mkdir -p toolchain/gcc/linux-x86/{aarch64,arm} \
                      toolchain/clang/host/linux-x86
             ln -sf ../../../../aarch64-linux-android-4.9 \
@@ -52,9 +66,8 @@ jobs:
             ln -sf ../../../../clang-r383902 \
               toolchain/clang/host/linux-x86/clang-r383902
 
-
       - run:
-          name: Patch gcc-wrapper for Python3
+          name: Patch gcc-wrapper
           command: |
             sed -i 's/print >> sys.stderr, \(.*\)/print(\1, file=sys.stderr)/' \
                 kernel/scripts/gcc-wrapper.py
@@ -64,7 +77,6 @@ jobs:
           command: |
             set -e
             cd kernel
-
             export ARCH=arm64
             export CC=clang
             export LLVM=1
